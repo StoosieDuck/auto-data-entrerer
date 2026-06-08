@@ -10,7 +10,7 @@ try:
     from pynput import mouse
     import pyautogui
     from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QFrame
-from PyQt6.QtCore import Qt, pyqtSignal
+    from PyQt6.QtCore import Qt, pyqtSignal
 except ImportError as e:
     print(f"Error importing modules: {e}")
     print("Would you like to install the required modules? (y/n)")
@@ -22,7 +22,7 @@ except ImportError as e:
         from pynput import mouse
         import pyautogui
         from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QFrame
-    from PyQt6.QtCore import Qt, pyqtSignal
+        from PyQt6.QtCore import Qt, pyqtSignal
     else:
         print("Exiting program.")
         exit()
