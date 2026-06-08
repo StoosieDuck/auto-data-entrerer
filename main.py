@@ -253,7 +253,7 @@ def run_automation(overlay):
         for i in range(1, 11):
             if stopAutomation: 
                 break
-            overlay.update_text_signal.emit(f"Status: Saving Entry {i}/10")
+            overlay.update_text_signal.emit(f"Status: Saving Entry {i}/10 PRESS CTRL+SHIFT+P TO FORCE QUIT")
             pyautogui.moveTo(variables[f"data_{i}"])
             pyautogui.click()
             save_spectrum_and_nk()
