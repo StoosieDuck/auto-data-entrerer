@@ -34,7 +34,7 @@
     justCalibrated = False
     folder_path = None
 
-    file_explorer_corners[] #top right, top left...
+    file_explorer_corners = []
     points = []
 
     def force_exit():
@@ -48,11 +48,11 @@
     logfile_path = os.path.join(script_dir, "log.txt")
 
     def log(text, newLine):
-        with open (logfile_path, "w", encoding="utfi-8") as logfile:
+        with open(logfile_path, "a", encoding="utf-8") as logfile: 
             if newLine:
-                file.write(f"{datetime.now()} : {text}\n")
+                logfile.write(f"{datetime.now().time()} : {text}\n") 
             else:
-                file.write(f"{datetime.now()} : {text}")
+                logfile.write(f"{datetime.now().time()} : {text}")
 
     keyboard.add_hotkey('ctrl+shift+p', force_exit)
 
@@ -113,6 +113,16 @@
 
     # Automation
     def run_automation(overlay):
+        
+        click_event = threading.Event()
+
+        def on_click(x, y, button, pressed):
+            if pressed:
+                points.append((x, y))
+                click_event.set()
+
+        listener = mouse.Listener(on_click=on_click)
+        listener.start()
 
         # Initialize variables to None
         variables = {
@@ -126,7 +136,7 @@
 
         print("\nWelcome to the Auto Data Enterer for FILMapper!")
         print("Ensure 'Auto Position legends' is UNCHECKED in setup -> display settings.")
-        log(fdatetime.now()), True
+        log(datetime.now(), True)
 
         overlay.update_text_signal.emit("Terminal: enter the path to the folder to save data")
         folder_path = input("Enter the path to the folder to save data: ")
@@ -143,16 +153,6 @@
                     log("user chose to overrite config.json", True)
                     print("Exiting program.")
                     force_exit()
-
-            click_event = threading.Event()
-
-            def on_click(x, y, button, pressed):
-                if pressed:
-                    points.append((x, y))
-                    click_event.set()
-
-            listener = mouse.Listener(on_click=on_click)
-            listener.start()
         
             overlay.update_text_signal.emit("Please add first 10 data entries to measure and then click Ctrl+Shift+k to continue")
             print("\nPlease add first 10 data entries to measure and then click Ctrl+Shift+k to continue")
@@ -196,7 +196,7 @@
                 start_time = time.perf_counter()
                 click_event.clear()
                 click_event.wait()
-                end_time - time.perf_counter()
+                end_time = time.perf_counter()
                 if keypress:
                     keyboard.wait(keypress)
                 if var_name:
@@ -291,9 +291,9 @@
             log(f"pasted {pyperclip.paste()}")
             pyautogui.hotkey('ctrl', 'a')
             pyautogui.hotkey('ctrl', 'c')
-            if (f"nk_{original_name}" != pyperclip.paste):
-                log(f"was supposed to write nk_{original_name} but wrote {pyperclip.paste}")
-                print(f"was supposed to write nk_{original_name} but wrote {pyperclip.paste}")
+            if (f"nk_{original_name}" != pyperclip.paste()):
+                log(f"was supposed to write nk_{original_name} but wrote {pyperclip.paste()}")
+                print(f"was supposed to write nk_{original_name} but wrote {pyperclip.paste()}")
                 force_exit()
             log(f"copied {pyperclip.paste()}")
             time.sleep(1)
@@ -306,14 +306,17 @@
             click_event.clear()
             click_event.wait()
             top_right_corner = points[-1]
+
             overlay.update_text_signal.emit("Please select the bottom left corner of the file explorer window")
             click_event.clear()
             click_event.wait()
-            bottom_left_corner = points[-1]     
-            file_explorer_corners.append((top_right_corner, bottom_left_corner))
-            log(f"bottom left: {bottom_left_corner}, top right: {top_right_corner}")
-            print(f"bottom left: {bottom_left_corner}, top right: {top_right_corner}")       
-
+            bottom_left_corner = points[-1]
+            
+            file_explorer_corners.append((bottom_left_corner, top_right_corner))
+            area = (top_right_corner[0] - bottom_left_corner[0]) * (top_right_corner[1] - bottom_left_corner[1])
+            log(f"bottom left: {bottom_left_corner}, top right: {top_right_corner}, total area: {area}")
+            print(f"bottom left: {bottom_left_corner}, top right: {top_right_corner} total area: {area}")
+                 
             pyautogui.moveTo(variables["folder_path_box"])
             pyautogui.click()
             log("clicked folder path box")
@@ -328,7 +331,7 @@
             time.sleep(1)
             pyautogui.hotkey('ctrl', 'a')
             pyautogui.hotkey('ctrl', 'v')
-            log(f"pasted {pyperclip.paste}")
+            log(f"pasted {pyperclip.paste()}")
             time.sleep(1)
             pyautogui.moveTo(variables["save_button"])
             pyautogui.click()
