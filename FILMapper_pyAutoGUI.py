@@ -65,7 +65,7 @@ class TopOverlayBar(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setFixedSize(800, 30)
+        self.setFixedSize(1000, 30)
 
         # Window Flags (Frameless, Always on Top, Click-through)
         self.setWindowFlags(
@@ -80,7 +80,7 @@ class TopOverlayBar(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         self.container = QFrame(self)
-        self.container.setFixedSize(800, 30)
+        self.container.setFixedSize(1000, 30)
         self.container.setStyleSheet("""
             QFrame {
                 background-color: rgba(50, 50, 50, 50);
@@ -251,6 +251,7 @@ def run_main(overlay):
         force_exit() # Forces the Qt App to close as well
 
     def save_spectrum_and_nk():
+        global lastSavedFile
         pyautogui.moveTo(variables["file_menu"])
         pyautogui.click()
         log("Moved to file menu")
@@ -259,7 +260,7 @@ def run_main(overlay):
         pyautogui.moveTo(variables["save_spectrum"])
         pyautogui.click()
         log("Saved spectrum")
-        time.sleep(delay_time)
+        time.sleep(0.5)
 
         pyautogui.hotkey('ctrl', 'c')
         time.sleep(delay_time)
@@ -282,6 +283,7 @@ def run_main(overlay):
         log("selected file type dropdown")
         time.sleep(delay_time)
 
+        pyautogui.press('down')
         pyautogui.press('down')
         pyautogui.press('down')
         pyautogui.press('enter')
@@ -323,7 +325,7 @@ def run_main(overlay):
         pyautogui.moveTo(variables["ok_button"])
         pyautogui.click()
         log("clicked ok button")
-        time.sleep(delay_time)
+        time.sleep(0.5)
 
         pyautogui.hotkey('ctrl', 'v')
         log(f"pasted {pyperclip.paste()}")
@@ -388,23 +390,15 @@ def run_main(overlay):
         
         # 3. Handle the terminal focus and input
         if chosen_action == 'i':
-            # Force the Windows console to the front
-            hwnd = ctypes.windll.kernel32.GetConsoleWindow()
-            if hwnd:
-                ctypes.windll.user32.ShowWindow(hwnd, 5) # 5 = SW_SHOW
-                ctypes.windll.user32.SetForegroundWindow(hwnd)
             
             overlay.update_text_signal.emit("Terminal: Waiting for user input...")
             
             try:
                 new_amount = input(f"\nEnter the new number of data points to save (currently {points_to_save}): ")
                 points_to_save = int(new_amount)
-                
-                # Safety check: prevent asking for more points than you actually calibrated
-                max_calibrated = sum(1 for k, v in variables.items() if k.startswith("data_") and v is not None)
-                if points_to_save > max_calibrated:
-                    print(f"Warning: You only calibrated {max_calibrated} points. Capping limit at {max_calibrated}.")
-                    points_to_save = max_calibrated
+                if points_to_save > 10:
+                    print(f"Warning: You entered {points_to_save}. Capping to 10;")
+                    points_to_save = 10
                     
             except ValueError:
                 print("Invalid number. Keeping previous amount.")
@@ -415,12 +409,18 @@ def run_main(overlay):
         if chosen_action == 'k':
             pyautogui.moveTo(variables["measure_tab"])
             pyautogui.click()
-
-            for i in range(1, points_to_save + 1):
-                overlay.update_text_signal.emit(f"Status: Saving Entry {i}/{points_to_save} PRESS CTRL+SHIFT+P TO FORCE QUIT")
-                pyautogui.moveTo(variables[f"data_{i}"])
-                pyautogui.click()
-                save_spectrum_and_nk()
+            if points_to_save == 10:
+                for i in range(1, 11):
+                    overlay.update_text_signal.emit(f"Status: Saving Entry {i}/{10} PRESS CTRL+SHIFT+P TO FORCE QUIT")
+                    pyautogui.moveTo(variables[f"data_{i}"])
+                    pyautogui.click()
+                    save_spectrum_and_nk()
+            else:
+                for i in range(11-points_to_save, 11):
+                    overlay.update_text_signal.emit(f"Status: Saving Entry {i}/{10} PRESS CTRL+SHIFT+P TO FORCE QUIT")
+                    pyautogui.moveTo(variables[f"data_{i}"])
+                    pyautogui.click()
+                    save_spectrum_and_nk()
         
     overlay.update_text_signal.emit("Status: Automation Stopped")
     print("Automation stopped.")
